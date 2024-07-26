@@ -1,0 +1,51 @@
+# Системные файлы и файлы операционной системы
+.DS_Store
+Thumbs.db
+
+# Файлы отладочной информации и исполняемые файлы
+*.axf
+*.elf
+*.hex
+*.bin
+*.map
+*.sct
+*.d
+*.crf
+*.dep
+
+# Временные и резервные файлы
+*.bak
+*.log
+*.tmp
+
+# Файлы проекта Keil uVision
+#*.uvguix.*
+#*.uvopt.*
+#*.uvproj.*
+#*.uvoptx
+#*.uvprojx
+#*.build_log.htm
+
+# Папки, сгенерированные Keil
+BUILD/
+Objects/
+Listings/
+Log/
+Output/
+*.htm
+
+# Файлы отладки
+*.ini
+*.dbg
+
+# Конфигурационные файлы и файлы среды IDE
+*.user
+
+# Другие игнорируемые файлы
+*.iobj
+*.rteconfig
+
+# Системные файлы Windows
+$RECYCLE.BIN/
+ehthumbs.db
+Desktop.ini
