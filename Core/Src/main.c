@@ -24,6 +24,8 @@
 /* USER CODE BEGIN Includes */
 #include "ADXL362.h"
 #include "ssd1306.h"
+#include "ssd1306_fonts.h"
+#include <stdlib.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -77,6 +79,8 @@ static void MX_I2C1_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
+void OLED_Move_Up_Z(SSD1306_COLOR);
+void OLED_Move_Down_Z(SSD1306_COLOR);
 void OLED_Move_Up(SSD1306_COLOR);
 void OLED_Move_Down(SSD1306_COLOR);
 void OLED_Move_Right(SSD1306_COLOR);
@@ -130,14 +134,23 @@ int main(void)
   /* USER CODE BEGIN 2 */
   //uint8_t time = 100;
   uint8_t i = 0;
+  //---------------------
+  char testOLED[] = "test OLED";
+  ssd1306_SetCursor(5,5);
+  ssd1306_WriteString(testOLED, Font_7x10, White);
   ssd1306_UpdateScreen();
-  
+  //---------------------
   ping();
   ping();
   uint16_t uint16x = 0,uint16y = 0,uint16z = 0;
   uint8_t uint8x = 0,uint8y = 0,uint8z = 0;
+  uint8_t uint8x1 = 0,uint8y1 = 0,uint8z1 = 0;
+  int8_t delta = 0;
+  uint8_t flag_xyz;
   ADXL362_Init(&hspi1,&hdma_spi1_rx,&hdma_spi1_tx);
-  OLED_Move_Right(White);
+  
+  
+  //OLED_Move_Right(White);
   
 //  uint8_t buff[] = "TestDMA\r\n";
   //HAL_UART_Transmit_DMA(&huart2, buff, sizeof(buff)-1);
@@ -148,6 +161,7 @@ int main(void)
   
   while (1)
   {
+    /*
     GPIO_PinState currentButtonState1 = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
     if (currentButtonState1 != GPIO_PIN_RESET)
     {
@@ -176,8 +190,70 @@ int main(void)
       }
       ssd1306_UpdateScreen();
     }
-    ADXL362_ReadXYZ_16(&uint16x,&uint16y,&uint16z);
+    */
+    //HAL_Delay(500);
+    HAL_Delay(500);
     ADXL362_ReadXYZ_8(&uint8x,&uint8y,&uint8z);
+    
+    if(abs(uint8x - uint8x1) > abs(uint8y - uint8y1) && abs(uint8x - uint8x1) > abs(uint8z - uint8z1)){
+      flag_xyz = 0;
+      delta = uint8x - uint8x1;
+    } else 
+    if(abs(uint8y - uint8y1) > abs(uint8x - uint8x1) && abs(uint8y - uint8y1) > abs(uint8z - uint8z1)){
+      flag_xyz = 1;
+      delta = uint8y - uint8y1;
+    } else 
+    if(abs(uint8z - uint8z1) > abs(uint8y - uint8y1) && abs(uint8z - uint8z1) > abs(uint8x - uint8x1)){
+      flag_xyz = 2;
+      delta = uint8z - uint8z1;
+    }     
+    
+    if(delta < -5 || delta > 5){
+    
+    switch(flag_xyz){
+      
+      case 0:
+          if(delta > 0){
+          ssd1306_FillRectangle(0,0,128,64,Black);
+          OLED_Move_Right(White);
+          }
+          else{
+          ssd1306_FillRectangle(0,0,128,64,Black);
+          OLED_Move_Left(White);
+          }
+    break;
+          
+      case 1:
+          if(delta > 0){
+          ssd1306_FillRectangle(0,0,128,64,Black);
+          OLED_Move_Up(White);
+          }
+          else{
+          ssd1306_FillRectangle(0,0,128,64,Black);
+          OLED_Move_Down(White);
+          }
+          break;
+          
+      case 2:
+        if(delta > 0){
+          ssd1306_FillRectangle(0,0,128,64,Black);
+          OLED_Move_Up_Z(White);
+          }
+          else{
+          ssd1306_FillRectangle(0,0,128,64,Black);
+          OLED_Move_Down_Z(White);
+          }
+          break;
+      }
+    }
+        else{
+         ssd1306_FillRectangle(0,0,128,64,Black);
+        }
+        
+    
+    ssd1306_UpdateScreen();
+    
+    //ADXL362_ReadXYZ_16(&uint16x,&uint16y,&uint16z);
     
     index_b=5;
     
@@ -208,8 +284,9 @@ int main(void)
   
     
     
-    HAL_Delay(1000);
     
+    
+    ADXL362_ReadXYZ_8(&uint8x1,&uint8y1,&uint8z1);
    
     /* USER CODE END WHILE */
 
@@ -588,6 +665,14 @@ void HAL_SPI_RxHalfCpltCallback	(	SPI_HandleTypeDef * 	hspi	)	{
 
 
 //------------------------------------------------------------------------------
+void OLED_Move_Up_Z(SSD1306_COLOR color){
+  ssd1306_DrawCircle(64,64,2,color);
+  ssd1306_DrawCircle(64,64,20,color);
+}
+void OLED_Move_Down_Z(SSD1306_COLOR color){
+  ssd1306_Line(64,0, 64,64,color);
+  ssd1306_Line(65,0, 65,65,color);
+}
 void OLED_Move_Up(SSD1306_COLOR color){
   ssd1306_Line(64,0, 64,64,color);
   ssd1306_Line(65,0, 65,65,color);
