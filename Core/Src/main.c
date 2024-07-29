@@ -135,10 +135,11 @@ int main(void)
   //uint8_t time = 100;
   uint8_t i = 0;
   //---------------------
-  char testOLED[] = "test OLED";
-  ssd1306_SetCursor(5,5);
-  ssd1306_WriteString(testOLED, Font_7x10, White);
-  ssd1306_UpdateScreen();
+  //char testOLED[] = "test OLED";
+  //ssd1306_SetCursor(5,5);
+  //ssd1306_WriteString(testOLED, Font_7x10, White);
+  //ssd1306_SetCursor(0,0);
+  //ssd1306_UpdateScreen();
   //---------------------
   ping();
   ping();
@@ -148,6 +149,7 @@ int main(void)
   int8_t delta = 0;
   uint8_t flag_xyz;
   ADXL362_Init(&hspi1,&hdma_spi1_rx,&hdma_spi1_tx);
+  
   
   
   //OLED_Move_Right(White);
@@ -195,6 +197,7 @@ int main(void)
     HAL_Delay(500);
     ADXL362_ReadXYZ_8(&uint8x,&uint8y,&uint8z);
     
+    delta = 0;
     if(abs(uint8x - uint8x1) > abs(uint8y - uint8y1) && abs(uint8x - uint8x1) > abs(uint8z - uint8z1)){
       flag_xyz = 0;
       delta = uint8x - uint8x1;
@@ -205,10 +208,10 @@ int main(void)
     } else 
     if(abs(uint8z - uint8z1) > abs(uint8y - uint8y1) && abs(uint8z - uint8z1) > abs(uint8x - uint8x1)){
       flag_xyz = 2;
-      delta = uint8z - uint8z1;
+      delta = (uint8z - uint8z1)*10;
     }     
     
-    if(delta < -5 || delta > 5){
+    if(delta < -10 || delta > 10){
     
     switch(flag_xyz){
       
@@ -666,12 +669,12 @@ void HAL_SPI_RxHalfCpltCallback	(	SPI_HandleTypeDef * 	hspi	)	{
 
 //------------------------------------------------------------------------------
 void OLED_Move_Up_Z(SSD1306_COLOR color){
-  ssd1306_DrawCircle(64,64,2,color);
-  ssd1306_DrawCircle(64,64,20,color);
+  ssd1306_DrawCircle(64,32,1,color);
+  ssd1306_DrawCircle(64,32,10,color);
 }
 void OLED_Move_Down_Z(SSD1306_COLOR color){
-  ssd1306_Line(64,0, 64,64,color);
-  ssd1306_Line(65,0, 65,65,color);
+  ssd1306_Line(32,16, 96,48,White);
+  ssd1306_Line(32,48, 96,16,White);
 }
 void OLED_Move_Up(SSD1306_COLOR color){
   ssd1306_Line(64,0, 64,64,color);
