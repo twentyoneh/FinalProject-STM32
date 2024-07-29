@@ -2,19 +2,10 @@
 /**
   ******************************************************************************
   * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2024 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
+  * @brief Основной файл программы, включающий в себя функции инициализации периферии, основной цикл программы и обработку данных.
+  * 
+  * Этот файл содержит в себе основной цикл программы, инициализацию всех необходимых периферийных устройств и обработку данных,
+  * получаемых от акселерометра ADXL362 и передачу данных по UART.
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
@@ -35,6 +26,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+///Размер буфера для передачи по UART
 #define UART_TX_BUFFER_SIZE  7
 
 /* USER CODE END PD */
@@ -57,16 +49,22 @@ DMA_HandleTypeDef hdma_usart2_tx;
 
 /* USER CODE BEGIN PV */
 
+/// Флаг успешной передачи данных по SPI (передача завершена). Объявлена в файле ADXL362.c
 extern bool spiTxComplete;
+/// Флаг успешного приема данных по SPI (прием завершен). Объявлена в файле ADXL362.c
 extern bool spiRxComplete;
-
+/// Флаг успешной передачи данных оп UART.
 bool uartTxComplete = false;
 
-uint8_t xBuff[UART_TX_BUFFER_SIZE] = "X: ";
-uint8_t yBuff[UART_TX_BUFFER_SIZE] = "Y: ";
-uint8_t zBuff[UART_TX_BUFFER_SIZE] = "Z: ";
-uint8_t txBuff[UART_TX_BUFFER_SIZE*3+2];
-
+/// Буфер XDATA для передачи по UART
+uint8_t xBuff[UART_TX_BUFFER_SIZE] = "X: "; 
+/// Буфер YDATA для передачи по UART
+uint8_t yBuff[UART_TX_BUFFER_SIZE] = "Y: "; 
+/// Буфер ZDATA для передачи по UART
+uint8_t zBuff[UART_TX_BUFFER_SIZE] = "Z: "; 
+/// Финальный буфер для передачи по UART, содержащий данные из xBuff, yBuff и zBuff
+uint8_t txBuff[UART_TX_BUFFER_SIZE*3+2];    
+/// Индекс буфера передачи данных по UART
 uint8_t index_b = 0;
 
 /* USER CODE END PV */
@@ -90,6 +88,10 @@ void CreateTxBuff(uint8_t*, uint8_t*, uint8_t* ,uint8_t* );
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+/**
+ * @brief      Проверка работоспособности платы
+ * 
+ */
   void ping(){
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
   HAL_Delay(100);
@@ -121,8 +123,6 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-  //HAL_SPI_MspInit(&hspi1); //????????????????????
-  ssd1306_Init();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -132,30 +132,18 @@ int main(void)
   MX_SPI1_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  //uint8_t time = 100;
-  uint8_t i = 0;
-  //---------------------
-  //char testOLED[] = "test OLED";
-  //ssd1306_SetCursor(5,5);
-  //ssd1306_WriteString(testOLED, Font_7x10, White);
-  //ssd1306_SetCursor(0,0);
-  //ssd1306_UpdateScreen();
-  //---------------------
+  ssd1306_Init(); // Инициализация OLED дисплея 
+  ADXL362_Init(&hspi1,&hdma_spi1_rx,&hdma_spi1_tx); // Инициализация акселерометра ADXL362 
+
   ping();
   ping();
-  uint16_t uint16x = 0,uint16y = 0,uint16z = 0;
+  // Объявление и инициализация переменных для хранения данных акселерометра
+  //uint16_t uint16x = 0,uint16y = 0,uint16z = 0;
   uint8_t uint8x = 0,uint8y = 0,uint8z = 0;
   uint8_t uint8x1 = 0,uint8y1 = 0,uint8z1 = 0;
   int8_t delta = 0;
   uint8_t flag_xyz;
-  ADXL362_Init(&hspi1,&hdma_spi1_rx,&hdma_spi1_tx);
   
-  
-  
-  //OLED_Move_Right(White);
-  
-//  uint8_t buff[] = "TestDMA\r\n";
-  //HAL_UART_Transmit_DMA(&huart2, buff, sizeof(buff)-1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -163,40 +151,12 @@ int main(void)
   
   while (1)
   {
-    /*
-    GPIO_PinState currentButtonState1 = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
-    if (currentButtonState1 != GPIO_PIN_RESET)
-    {
-      if(i!=4){
-      switch(i){
-        case 0:
-        ssd1306_FillRectangle(0,0,128,64,Black);
-        OLED_Move_Up(White);
-        break;
-        case 1:
-        ssd1306_FillRectangle(0,0,128,64,Black);
-        OLED_Move_Right(White);
-        break;
-        case 2:
-        ssd1306_FillRectangle(0,0,128,64,Black);
-        OLED_Move_Down(White);
-        break;
-        case 3:
-        ssd1306_FillRectangle(0,0,128,64,Black);
-        OLED_Move_Left(White);
-        break;
-      }
-      i++;
-      } else{
-      i = 0;
-      }
-      ssd1306_UpdateScreen();
-    }
-    */
-    //HAL_Delay(500);
+   
     HAL_Delay(500);
-    ADXL362_ReadXYZ_8(&uint8x,&uint8y,&uint8z);
-    
+    // Чтение данных с регистрова ADXL362
+    ADXL362_ReadXYZ_8(&uint8x,&uint8y,&uint8z); 
+
+    // Определение оси с наибольшим изменением
     delta = 0;
     if(abs(uint8x - uint8x1) > abs(uint8y - uint8y1) && abs(uint8x - uint8x1) > abs(uint8z - uint8z1)){
       flag_xyz = 0;
@@ -205,16 +165,16 @@ int main(void)
     if(abs(uint8y - uint8y1) > abs(uint8x - uint8x1) && abs(uint8y - uint8y1) > abs(uint8z - uint8z1)){
       flag_xyz = 1;
       delta = uint8y - uint8y1;
-    } else 
-    if(abs(uint8z - uint8z1) > abs(uint8y - uint8y1) && abs(uint8z - uint8z1) > abs(uint8x - uint8x1)){
+    } else {
       flag_xyz = 2;
-      delta = (uint8z - uint8z1)*10;
-    }     
-    
+      delta = (uint8z - uint8z1)*5;
+    } 
+
+    // В зависимости от разницы начальной и конечной координат рисуем стрелки / кружочки
     if(delta < -10 || delta > 10){
-    
     switch(flag_xyz){
       
+      // Изменения по оси X
       case 0:
           if(delta > 0){
           ssd1306_FillRectangle(0,0,128,64,Black);
@@ -226,6 +186,7 @@ int main(void)
           }
     break;
           
+      // Изменения по оси Y
       case 1:
           if(delta > 0){
           ssd1306_FillRectangle(0,0,128,64,Black);
@@ -237,6 +198,7 @@ int main(void)
           }
           break;
           
+      // Изменения по оси Z
       case 2:
         if(delta > 0){
           ssd1306_FillRectangle(0,0,128,64,Black);
@@ -254,15 +216,16 @@ int main(void)
         }
         
     
-    ssd1306_UpdateScreen();
+    ssd1306_UpdateScreen(); //Обновление экрана
     
     //ADXL362_ReadXYZ_16(&uint16x,&uint16y,&uint16z);
     
-    index_b=5;
-    
+    index_b=5; // Индекс для заполнения массива 
+
+    // Цикл, который заполняет массивы из которых соберём массив для передачи по UART
     do
     {
-      xBuff[index_b]=uint8x%10 + 48;
+      xBuff[index_b]=uint8x%10 + 48;  // Запись в ASCII 
       yBuff[index_b]=uint8y%10 + 48;
       zBuff[index_b]=uint8z%10 + 48;
       if(uint8x!=0){
@@ -281,15 +244,11 @@ int main(void)
     yBuff[6] = ';';
     zBuff[6] = ' ';
     
-    CreateTxBuff(xBuff,yBuff,zBuff,txBuff);
+    CreateTxBuff(xBuff,yBuff,zBuff,txBuff); //Создаём массив для передачи
     
-    HAL_UART_Transmit_DMA(&huart2, txBuff, UART_TX_BUFFER_SIZE*3+2);
+    HAL_UART_Transmit_DMA(&huart2, txBuff, UART_TX_BUFFER_SIZE*3+2);  //Передаём полцчившийся массив
   
-    
-    
-    
-    
-    ADXL362_ReadXYZ_8(&uint8x1,&uint8y1,&uint8z1);
+    ADXL362_ReadXYZ_8(&uint8x1,&uint8y1,&uint8z1);  //Считываем данные с акселерометра 
    
     /* USER CODE END WHILE */
 
@@ -545,7 +504,14 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+/**
+ * @brief  Собирает буфер для передачи данных по USART.
+ * @note   На вход приходят 3 переменные (значения регистров XDATA, YDATA, ZDATA). На выходе получаем регистр размером UART_TX_BUFFER_SIZE*3+2
+ * @param[in]  xb    Указатель на буфер с данными XDATA.
+ * @param[in]  yb    Указатель на буфер с данными YDATA.
+ * @param[in]  zb    Указатель на буфер с данными ZDATA.
+ * @param[in,out]  tb  Указатель на буфер для передачи данных.
+ */
 void CreateTxBuff(uint8_t* xb,uint8_t* yb,uint8_t* zb,uint8_t* tb){
   for(int i = 0; i < UART_TX_BUFFER_SIZE; i++){
     tb[i] = xb[i];
@@ -556,16 +522,31 @@ void CreateTxBuff(uint8_t* xb,uint8_t* yb,uint8_t* zb,uint8_t* tb){
   tb[UART_TX_BUFFER_SIZE*3+1] = '\n';
 }
 
+/**
+ * @brief  Обратный вызов по завершению передачи половины данных по UART.
+ *
+ * @param[in]  huart  Указатель на структуру UART_HandleTypeDef
+ */
 void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef *huart){
   
 }
 
+/**
+ * @brief  Обратный вызов по завершению передачи данных по UART.
+ *
+ * @param[in]  huart  Указатель на структуру UART_HandleTypeDef
+ */
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
   if(huart == &huart2){
-    uartTxComplete = true;
+    //uartTxComplete = true;
   }
 }
 
+/**
+ * @brief  Обратный вызов при ошибке передачи по UART.
+ *
+ * @param[in]  huart  Указатель на структуру UART_HandleTypeDef
+ */
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
   if (huart == &huart2)
@@ -601,7 +582,11 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
         }
 }
 
-
+/**
+ * @brief  Обратный вызов при ошибке передачи по SPI.
+ *
+ * @param[in]  hspi  Указатель на структуру SPI_HandleTypeDef
+ */
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef* hspi)
 {
   ping();
@@ -632,15 +617,20 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef* hspi)
         if (er & HAL_SPI_ERROR_DMA)
         {
             HAL_UART_Transmit(&huart2, (uint8_t *)"ERR_Callback_SPI - DMA transfer error\n", 37, 1000);
-            // Additional actions for DMA error can be added here if necessary
+            // Дополнительные действия при ошибке DMA могут быть добавлены здесь при необходимости
         }
 
-        // Clear all error flags
+        // Сброс всех флагов ошибок
         hspi->ErrorCode = HAL_SPI_ERROR_NONE;
     
         }
 }
 
+/**
+ * @brief  Обратный вызов по завершению передачи данных по SPI.
+ *
+ * @param[in]  hspi  Указатель на структуру SPI_HandleTypeDef
+ */
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
     if (hspi == &hspi1)
@@ -649,6 +639,11 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
     }
 }
 
+/**
+ * @brief  Обратный вызов по завершению приема данных по SPI.
+ *
+ * @param[in]  hspi  Указатель на структуру SPI_HandleTypeDef
+ */
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 {
     if (hspi == &hspi1)
@@ -657,50 +652,92 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
     }
 }
 
+/**
+ * @brief  Обратный вызов по завершению приема половины данных по SPI.
+ *
+ * @param[in]  hspi  Указатель на структуру SPI_HandleTypeDef
+ */
 void HAL_SPI_TxHalfCpltCallback	(	SPI_HandleTypeDef * 	hspi	)	{
   
 }
 
+/**
+ * @brief  Обратный вызов по завершению передачи половины данных по SPI.
+ *
+ * @param[in]  hspi  Указатель на структуру SPI_HandleTypeDef
+ */
 void HAL_SPI_RxHalfCpltCallback	(	SPI_HandleTypeDef * 	hspi	)	{
 
 
 }
 
-
-//------------------------------------------------------------------------------
+/**
+ * @brief  Отображение круга на OLED дисплее для перемещения вверх по оси Z.
+ *
+ * @param[in]  color  Цвет круга
+ */
 void OLED_Move_Up_Z(SSD1306_COLOR color){
   ssd1306_DrawCircle(64,32,1,color);
   ssd1306_DrawCircle(64,32,10,color);
 }
+
+/**
+ * @brief  Отображение линий на OLED дисплее для перемещения вниз по оси Z.
+ *
+ * @param[in]  color  Цвет линий
+ */
 void OLED_Move_Down_Z(SSD1306_COLOR color){
   ssd1306_Line(32,16, 96,48,White);
   ssd1306_Line(32,48, 96,16,White);
 }
+
+/**
+ * @brief  Отображение линий на OLED дисплее для перемещения вверх.
+ *
+ * @param[in]  color  Цвет линий
+ */
 void OLED_Move_Up(SSD1306_COLOR color){
   ssd1306_Line(64,0, 64,64,color);
   ssd1306_Line(65,0, 65,65,color);
   ssd1306_Line(64,0, 32,32,color);
   ssd1306_Line(65,0, 96,32,color);
 }
+
+/**
+ * @brief  Отображение линий на OLED дисплее для перемещения вниз.
+ *
+ * @param[in]  color  Цвет линий
+ */
 void OLED_Move_Down(SSD1306_COLOR color){
   ssd1306_Line(64,0, 64,64,color);
   ssd1306_Line(65,0, 65,65,color);
   ssd1306_Line(64,64, 32,32,color);
   ssd1306_Line(65,65, 96,32,color);
 }
+
+/**
+ * @brief  Отображение линий на OLED дисплее для перемещения вправо.
+ *
+ * @param[in]  color  Цвет линий
+ */
 void OLED_Move_Right(SSD1306_COLOR color){
   ssd1306_Line(0,32, 128,32,color);
   ssd1306_Line(0,31, 128,31,color);
   ssd1306_Line(128,32, 96,16,color);
   ssd1306_Line(128,31, 96,48,color);
 }
+
+/**
+ * @brief  Отображение линий на OLED дисплее для перемещения влево.
+ *
+ * @param[in]  color  Цвет линий
+ */
 void OLED_Move_Left(SSD1306_COLOR color){
   ssd1306_Line(0,32, 128,32,color);
   ssd1306_Line(0,31, 128,31,color);
   ssd1306_Line(0,32, 32,16,color);
   ssd1306_Line(0,31, 32,48,color);
 }
-//------------------------------------------------------------------------------
 
 /* USER CODE END 4 */
 
