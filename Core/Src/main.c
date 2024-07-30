@@ -56,6 +56,15 @@ extern bool spiRxComplete;
 /// Флаг успешной передачи данных оп UART.
 bool uartTxComplete = false;
 
+uint8_t rightXOut[] = {82, 73, 71, 72, 84, 00};
+uint8_t leftXOut[] = {76, 69, 70, 84, 00, 00};
+uint8_t upYOut[] = {89, 32, 85, 80, 00, 00};
+uint8_t downYOut[] = {89, 32, 68, 79, 87, 78};
+uint8_t upZOut[] = {90, 32, 85, 80, 00, 00};
+uint8_t downZOut[] = {90, 32, 68, 79, 87, 78};
+uint8_t* uartOut[6] = {rightXOut,leftXOut,upYOut,downYOut,upZOut,downZOut}; ///<Для вывода по UART>
+
+
 /// Буфер XDATA для передачи по UART
 uint8_t xBuff[UART_TX_BUFFER_SIZE] = "X: "; 
 /// Буфер YDATA для передачи по UART
@@ -169,7 +178,7 @@ int main(void)
       flag_xyz = 2;
       delta = (uint8z - uint8z1)*5;
     } 
-
+    index_b = 6;
     // В зависимости от разницы начальной и конечной координат рисуем стрелки / кружочки
     if(delta < -10 || delta > 10){
     switch(flag_xyz){
@@ -179,10 +188,12 @@ int main(void)
           if(delta > 0){
           ssd1306_FillRectangle(0,0,128,64,Black);
           OLED_Move_Right(White);
+          index_b = 0;
           }
           else{
           ssd1306_FillRectangle(0,0,128,64,Black);
           OLED_Move_Left(White);
+          index_b = 1;
           }
     break;
           
@@ -191,10 +202,12 @@ int main(void)
           if(delta > 0){
           ssd1306_FillRectangle(0,0,128,64,Black);
           OLED_Move_Up(White);
+          index_b = 2;
           }
           else{
           ssd1306_FillRectangle(0,0,128,64,Black);
           OLED_Move_Down(White);
+          index_b = 3;
           }
           break;
           
@@ -203,10 +216,12 @@ int main(void)
         if(delta > 0){
           ssd1306_FillRectangle(0,0,128,64,Black);
           OLED_Move_Up_Z(White);
+          index_b = 4;
           }
           else{
           ssd1306_FillRectangle(0,0,128,64,Black);
           OLED_Move_Down_Z(White);
+          index_b = 5;
           }
           break;
       }
@@ -215,11 +230,16 @@ int main(void)
          ssd1306_FillRectangle(0,0,128,64,Black);
         }
         
-    
     ssd1306_UpdateScreen(); //Обновление экрана
+        
+        if(index_b!=6){
+          HAL_UART_Transmit_DMA(&huart2, uartOut[index_b], 6);
+        }
+        
+    
     
     //ADXL362_ReadXYZ_16(&uint16x,&uint16y,&uint16z);
-    
+    /*
     index_b=5; // Индекс для заполнения массива 
 
     // Цикл, который заполняет массивы из которых соберём массив для передачи по UART
@@ -246,8 +266,8 @@ int main(void)
     
     CreateTxBuff(xBuff,yBuff,zBuff,txBuff); //Создаём массив для передачи
     
-    HAL_UART_Transmit_DMA(&huart2, txBuff, UART_TX_BUFFER_SIZE*3+2);  //Передаём полцчившийся массив
-  
+    HAL_UART_Transmit_DMA(&huart2, txBuff, UART_TX_BUFFER_SIZE*3+2);  //Передаём получившийся массив
+    */
     ADXL362_ReadXYZ_8(&uint8x1,&uint8y1,&uint8z1);  //Считываем данные с акселерометра 
    
     /* USER CODE END WHILE */
