@@ -1,7 +1,7 @@
 # Системные файлы и файлы операционной системы
 .DS_Store
 Thumbs.db
-./MDK-ARM/FinalProject/
+MDK-ARM/FinalProject/
 # Файлы отладочной информации и исполняемые файлы
 *.axf
 *.elf
@@ -10,6 +10,7 @@ Thumbs.db
 *.map
 *.sct
 *.d
+*.o
 *.crf
 *.dep
 

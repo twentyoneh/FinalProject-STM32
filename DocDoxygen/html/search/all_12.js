@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['x_0',['x',['../struct_s_s_d1306___v_e_r_t_e_x.html#a0f561e77fa0f040b637f4e04f6cd8078',1,'SSD1306_VERTEX']]],
-  ['xbuff_1',['xBuff',['../main_8c.html#ac0ae09c6ab88cae8dc82f14c493e9a02',1,'main.c']]]
+  ['white_0',['White',['../ssd1306_8h.html#a6f68a90e6eefe5396bcbec2cd699d500ab548046646b36c12aa6ba841de500094',1,'ssd1306.h']]],
+  ['width_1',['width',['../struct_s_s_d1306___font__t.html#a22216e9c6eb054405ce5a31903b11fcb',1,'SSD1306_Font_t']]]
 ];
