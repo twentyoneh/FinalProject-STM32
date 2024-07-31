@@ -10,6 +10,7 @@ MDK-ARM/FinalProject/
 *.map
 *.sct
 *.d
+*.o
 *.crf
 *.dep
 
